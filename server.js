@@ -149,32 +149,31 @@ console.log("Final Name:", name);
     // Send all data to Interakt
     //------------------------------------
     const interaktResponse = await axios.post(
-      "https://api.interakt.ai/v1/public/track/users/",
-      {
-        phoneNumber: formattedPhone,
-        name,
-        email,
+  "https://api.interakt.ai/v1/public/track/users/",
+  {
+    phoneNumber: formattedPhone,
 
-        traits: {
-          product_name: productName,
-          quantity: quantity,
-          amount: amount,
-          cart_id: cartId,
-          cart_link: cartLink,
-          utm_source: utmSource,
-          utm_campaign: utmCampaign,
-          utm_medium: utmMedium,
-          drop_off_stage: dropOffStage
-        }
-      },
-      {
-        headers: {
-          Authorization: `Basic ${process.env.INTERAKT_API_KEY}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-
+    traits: {
+      name: name,
+      email: email,
+      product_name: productName,
+      quantity: quantity,
+      amount: amount,
+      cart_id: cartId,
+      cart_link: cartLink,
+      utm_source: utmSource,
+      utm_campaign: utmCampaign,
+      utm_medium: utmMedium,
+      drop_off_stage: dropOffStage
+    }
+  },
+  {
+    headers: {
+      Authorization: `Basic ${process.env.INTERAKT_API_KEY}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
     console.log("Interakt response:");
     console.log(interaktResponse.data);
 
