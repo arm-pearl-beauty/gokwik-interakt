@@ -22,38 +22,49 @@ app.post("/webhooks/checkout", async (req, res) => {
 
     const data = req.body;
 
-    //-----------------------
-    // PHONE
-    //-----------------------
-    const phone =
-      data.phone ||
-      data.customer_phone ||
-      data.customer?.phone ||
-      data.checkout?.phone;
+   // -----------------------
+// PHONE
+// -----------------------
+const phone =
+  data.phone ||
+  data.customer_phone ||
+  data.customer?.phone ||
+  data.checkout?.phone;
 
-    if (!phone) {
-      return res.status(400).json({
-        success: false,
-        error: "Phone missing"
-      });
-    }
+if (!phone) {
+  return res.status(400).json({
+    success: false,
+    error: "Phone missing"
+  });
+}
 
-    let formattedPhone = phone.toString().replace(/\D/g, "");
+// Remove spaces, +, special chars
+let cleanedPhone = phone.toString().replace(/\D/g, "");
 
-    if (formattedPhone.length === 10) {
-      formattedPhone = "91" + formattedPhone;
-    }
+// Always take last 10 digits (actual Indian mobile number)
+let last10Digits = cleanedPhone.slice(-10);
 
-    //-----------------------
-    // NAME
-    //-----------------------
-    const name =
-      data.name ||
-      data.customer_name ||
-      data.customer?.name ||
-      `${data.customer?.firstname || ""} ${data.customer?.lastname || ""}`.trim() ||
-      "";
+// Add India country code only once
+let formattedPhone = "91" + last10Digits;
 
+console.log("Original Phone:", phone);
+console.log("Formatted Phone:", formattedPhone);
+
+    // -----------------------
+// NAME
+// -----------------------
+let name =
+  data.name ||
+  data.customer_name ||
+  data.customer?.name ||
+  `${data.customer?.firstname || ""} ${data.customer?.lastname || ""}`.trim();
+
+// fallback if no name
+if (!name || name.trim() === "") {
+  name = "Customer";
+}
+
+console.log("Final Name:", name);
     //-----------------------
     // EMAIL
     //-----------------------
