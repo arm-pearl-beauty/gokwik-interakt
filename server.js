@@ -6,12 +6,12 @@ const app = express();
 
 app.use(express.json());
 
-// test route
+// Test route
 app.get("/", (req, res) => {
   res.send("Webhook server running successfully");
 });
 
-// webhook route
+// Webhook route
 app.post("/webhooks/checkout", async (req, res) => {
   try {
     console.log("================================");
@@ -22,49 +22,46 @@ app.post("/webhooks/checkout", async (req, res) => {
 
     const data = req.body;
 
-   // -----------------------
-// PHONE
-// -----------------------
-const phone =
-  data.phone ||
-  data.customer_phone ||
-  data.customer?.phone ||
-  data.checkout?.phone;
+    //-----------------------
+    // PHONE
+    //-----------------------
+    const phone =
+      data.phone ||
+      data.customer_phone ||
+      data.customer?.phone ||
+      data.checkout?.phone;
 
-if (!phone) {
-  return res.status(400).json({
-    success: false,
-    error: "Phone missing"
-  });
-}
+    if (!phone) {
+      return res.status(400).json({
+        success: false,
+        error: "Phone missing"
+      });
+    }
 
-// Remove spaces, +, special chars
-let cleanedPhone = phone.toString().replace(/\D/g, "");
+    // Remove special characters
+    let cleanedPhone = phone.toString().replace(/\D/g, "");
 
-// Always take last 10 digits (actual Indian mobile number)
-let last10Digits = cleanedPhone.slice(-10);
+    // Take only last 10 digits
+    let last10Digits = cleanedPhone.slice(-10);
 
-// Add India country code only once
-let formattedPhone = "91" + last10Digits;
+    console.log("Original Phone:", phone);
+    console.log("Final Phone for Interakt:", last10Digits);
 
-console.log("Original Phone:", phone);
-console.log("Formatted Phone:", formattedPhone);
+    //-----------------------
+    // NAME
+    //-----------------------
+    let name =
+      data.name ||
+      data.customer_name ||
+      data.customer?.name ||
+      `${data.customer?.firstname || ""} ${data.customer?.lastname || ""}`.trim();
 
-    // -----------------------
-// NAME
-// -----------------------
-let name =
-  data.name ||
-  data.customer_name ||
-  data.customer?.name ||
-  `${data.customer?.firstname || ""} ${data.customer?.lastname || ""}`.trim();
+    if (!name || name.trim() === "") {
+      name = "Customer";
+    }
 
-// fallback if no name
-if (!name || name.trim() === "") {
-  name = "Customer";
-}
+    console.log("Final Name:", name);
 
-console.log("Final Name:", name);
     //-----------------------
     // EMAIL
     //-----------------------
@@ -131,7 +128,7 @@ console.log("Final Name:", name);
 
     console.log("Final extracted data:");
     console.log({
-      phone: formattedPhone,
+      phone: last10Digits,
       name,
       email,
       productName,
@@ -146,34 +143,42 @@ console.log("Final Name:", name);
     });
 
     //------------------------------------
-    // Send all data to Interakt
+    // Send data to Interakt
     //------------------------------------
-    const interaktResponse = await axios.post(
-  "https://api.interakt.ai/v1/public/track/users/",
-  {
-    phoneNumber: formattedPhone,
+    const payload = {
+      userId: cartId,
+      phoneNumber: last10Digits,
+      countryCode: "+91",
 
-    traits: {
-      name: name,
-      email: email,
-      product_name: productName,
-      quantity: quantity,
-      amount: amount,
-      cart_id: cartId,
-      cart_link: cartLink,
-      utm_source: utmSource,
-      utm_campaign: utmCampaign,
-      utm_medium: utmMedium,
-      drop_off_stage: dropOffStage
-    }
-  },
-  {
-    headers: {
-      Authorization: `Basic ${process.env.INTERAKT_API_KEY}`,
-      "Content-Type": "application/json"
-    }
-  }
-);
+      traits: {
+        name: name,
+        email: email,
+        product_name: productName,
+        quantity: quantity,
+        amount: amount,
+        cart_id: cartId,
+        cart_link: cartLink,
+        utm_source: utmSource,
+        utm_campaign: utmCampaign,
+        utm_medium: utmMedium,
+        drop_off_stage: dropOffStage
+      }
+    };
+
+    console.log("Sending payload to Interakt:");
+    console.log(JSON.stringify(payload, null, 2));
+
+    const interaktResponse = await axios.post(
+      "https://api.interakt.ai/v1/public/track/users/",
+      payload,
+      {
+        headers: {
+          Authorization: `Basic ${process.env.INTERAKT_API_KEY}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
     console.log("Interakt response:");
     console.log(interaktResponse.data);
 
