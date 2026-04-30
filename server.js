@@ -25,10 +25,8 @@ const formatPhone = (phone) => {
 
   let clean = phone.toString().replace(/\D/g, "");
 
-  // Always take last 10 digits
-  const last10 = clean.slice(-10);
-
-  return "91" + last10;
+  // Only last 10 digits
+  return clean.slice(-10);
 };
 
 // GoKwik Webhook Endpoint
