@@ -25,22 +25,10 @@ const formatPhone = (phone) => {
 
   let clean = phone.toString().replace(/\D/g, "");
 
-  // 🔥 Case 1: Already correct (12 digits starting with 91)
-  if (clean.length === 12 && clean.startsWith("91")) {
-    return clean;
-  }
+  // Always take last 10 digits
+  const last10 = clean.slice(-10);
 
-  // 🔥 Case 2: 10-digit number → add 91
-  if (clean.length === 10) {
-    return "91" + clean;
-  }
-
-  // 🔥 Case 3: Extra long (like 919199999999)
-  if (clean.length > 12) {
-    return "91" + clean.slice(-10);
-  }
-
-  return clean;
+  return "91" + last10;
 };
 
 // GoKwik Webhook Endpoint
