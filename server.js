@@ -14,6 +14,13 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  console.log("📩 HEADERS:", req.headers);
+  console.log("📩 METHOD:", req.method);
+  console.log("📩 URL:", req.url);
+  next();
+});
+
 // Test route
 app.get("/", (req, res) => {
   res.send("🚀 Webhook server running");
