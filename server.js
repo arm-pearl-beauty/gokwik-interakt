@@ -49,10 +49,11 @@ app.post("/webhook", async (req, res) => {
     // 🔍 Extract customer
     const customer = {
       name:
-        data.name ||
-        data.customer?.name ||
-        data.customer_name ||
-        "Unknown",
+  data.name ||
+  data.customer?.name ||
+  (data.customer?.firstname + " " + data.customer?.lastname) ||
+  data.customer_name ||
+  "Unknown",
 
       phone: formatPhone(
         data.phone ||
