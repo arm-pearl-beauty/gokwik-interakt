@@ -3,12 +3,36 @@ const axios = require("axios");
 require("dotenv").config();
 
 const app = express();
+
+// ✅ Handle all payload types
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// 🔥 Log every request (debugging)
+app.use((req, res, next) => {
+  console.log(`📩 ${req.method} ${req.url}`);
+  next();
+});
 
 // Test route
 app.get("/", (req, res) => {
   res.send("🚀 Webhook server running");
 });
+
+// 🔧 Phone formatter (VERY IMPORTANT)
+const formatPhone = (phone) => {
+  if (!phone) return null;
+
+  let clean = phone.toString().replace(/\D/g, "");
+
+  // Remove country code if already present
+  if (clean.startsWith("91") && clean.length > 10) {
+    clean = clean.slice(-10);
+  }
+
+  // Add country code
+  return `91${clean}`;
+};
 
 // GoKwik Webhook Endpoint
 app.post("/webhook", async (req, res) => {
@@ -20,7 +44,7 @@ app.post("/webhook", async (req, res) => {
 
     const data = req.body;
 
-    // 🔍 Flexible extraction (handles different payload formats)
+    // 🔍 Extract customer
     const customer = {
       name:
         data.name ||
@@ -28,11 +52,12 @@ app.post("/webhook", async (req, res) => {
         data.customer_name ||
         "Unknown",
 
-      phone:
+      phone: formatPhone(
         data.phone ||
-        data.mobile ||
-        data.phone_number ||
-        data.customer?.phone,
+          data.mobile ||
+          data.phone_number ||
+          data.customer?.phone
+      ),
 
       email:
         data.email ||
@@ -41,7 +66,6 @@ app.post("/webhook", async (req, res) => {
         "",
     };
 
-    // 🚫 Skip if no phone (Interakt requires phone)
     if (!customer.phone) {
       console.log("❌ No phone number found, skipping...");
       return res.status(200).send("No phone, skipped");
@@ -49,16 +73,67 @@ app.post("/webhook", async (req, res) => {
 
     console.log("✅ Extracted Customer:", customer);
 
-    // 📤 Send data to Interakt
+    // 🔥 Extract ALL useful data
+    const traits = {
+      name: customer.name,
+      email: customer.email,
+      source: "GoKwik Checkout",
+
+      // 📊 Marketing (IMPORTANT for ig/fb)
+      utm_source:
+        data.utm_source ||
+        data.utm?.source ||
+        data.marketing?.utm_source ||
+        "direct",
+
+      utm_medium:
+        data.utm_medium ||
+        data.utm?.medium ||
+        data.marketing?.utm_medium ||
+        "",
+
+      utm_campaign:
+        data.utm_campaign ||
+        data.utm?.campaign ||
+        data.marketing?.utm_campaign ||
+        "",
+
+      // 💰 Cart info
+      cart_value:
+        data.amount ||
+        data.cart_value ||
+        data.total_price ||
+        "",
+
+      currency: data.currency || "INR",
+
+      // 📍 Drop stage
+      drop_stage:
+        data.drop_off_stage ||
+        data.stage ||
+        data.checkout_stage ||
+        "",
+
+      // 🆔 Cart ID
+      cart_id: data.id || data.cart_id || "",
+
+      // 📦 Items (stringified)
+      items: JSON.stringify(
+        data.items ||
+          data.line_items ||
+          data.products ||
+          []
+      ),
+    };
+
+    console.log("📦 Final Traits:", traits);
+
+    // 📤 Send to Interakt
     await axios.post(
       "https://api.interakt.ai/v1/public/track/users/",
       {
         phoneNumber: customer.phone,
-        traits: {
-          name: customer.name,
-          email: customer.email,
-          source: "GoKwik Checkout",
-        },
+        traits: traits,
       },
       {
         headers: {
