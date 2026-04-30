@@ -25,13 +25,22 @@ const formatPhone = (phone) => {
 
   let clean = phone.toString().replace(/\D/g, "");
 
-  // Remove country code if already present
-  if (clean.startsWith("91") && clean.length > 10) {
-    clean = clean.slice(-10);
+  // 🔥 Case 1: Already correct (12 digits starting with 91)
+  if (clean.length === 12 && clean.startsWith("91")) {
+    return clean;
   }
 
-  // Add country code
-  return `91${clean}`;
+  // 🔥 Case 2: 10-digit number → add 91
+  if (clean.length === 10) {
+    return "91" + clean;
+  }
+
+  // 🔥 Case 3: Extra long (like 919199999999)
+  if (clean.length > 12) {
+    return "91" + clean.slice(-10);
+  }
+
+  return clean;
 };
 
 // GoKwik Webhook Endpoint
