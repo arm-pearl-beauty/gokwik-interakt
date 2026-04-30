@@ -53,12 +53,18 @@ app.post("/webhook", async (req, res) => {
       return res.status(200).send("No phone, skipped");
     }
 
-    // ✅ Format phone (India)
-    const formattedPhone = phone.startsWith("91")
-      ? phone
-      : `91${phone}`;
+    // 🔥 Clean & format phone properly
+let cleanPhone = phone.replace(/\D/g, ""); // remove +, spaces, etc
 
-    console.log("📞 Final Phone:", formattedPhone);
+// Remove existing 91 if present
+if (cleanPhone.length === 12 && cleanPhone.startsWith("91")) {
+  cleanPhone = cleanPhone.slice(2);
+}
+
+// Final format (always 91 + 10 digits)
+const formattedPhone = `91${cleanPhone}`;
+
+console.log("📞 Final Phone:", formattedPhone);
 
     // 📤 Send to Interakt
     const response = await axios.post(
