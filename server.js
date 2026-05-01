@@ -76,58 +76,106 @@ app.post("/webhook", async (req, res) => {
 
     console.log("✅ Extracted Customer:", customer);
 
-    // 🔥 Extract ALL useful data
+
     const traits = {
-      name: customer.name,
-      email: customer.email,
-      source: "GoKwik Checkout",
+  name: customer.name,
+  email: customer.email,
+  source: "GoKwik Checkout",
 
-      // 📊 Marketing (IMPORTANT for ig/fb)
-      utm_source:
-        data.utm_source ||
-        data.utm?.source ||
-        data.marketing?.utm_source ||
-        "direct",
+  // ✅ FIXED UTM
+  utm_source:
+    data.mkt_source ||
+    data.utm_source ||
+    data.utm?.source ||
+    "direct",
 
-      utm_medium:
-        data.utm_medium ||
-        data.utm?.medium ||
-        data.marketing?.utm_medium ||
-        "",
+  utm_medium:
+    data.mkt_medium ||
+    data.utm_medium ||
+    "",
 
-      utm_campaign:
-        data.utm_campaign ||
-        data.utm?.campaign ||
-        data.marketing?.utm_campaign ||
-        "",
+  utm_campaign:
+    data.mkt_campaign ||
+    data.utm_campaign ||
+    "",
 
-      // 💰 Cart info
-      cart_value:
-        data.amount ||
-        data.cart_value ||
-        data.total_price ||
-        "",
+  // ✅ FIXED CART VALUE
+  cart_value:
+    data.items_subtotal_price ||
+    data.amount ||
+    "",
 
-      currency: data.currency || "INR",
+  currency: data.currency || "INR",
 
-      // 📍 Drop stage
-      drop_stage:
-        data.drop_off_stage ||
-        data.stage ||
-        data.checkout_stage ||
-        "",
+  // ✅ FIXED DROP STAGE
+  drop_stage:
+    data.drop_stage ||
+    data.stage ||
+    "",
 
-      // 🆔 Cart ID
-      cart_id: data.id || data.cart_id || "",
+  // ✅ FIXED CART ID
+  cart_id:
+    data.id ||
+    data.cart_id ||
+    "",
 
-      // 📦 Items (stringified)
-      items: JSON.stringify(
-        data.items ||
-          data.line_items ||
-          data.products ||
-          []
-      ),
-    };
+  // ✅ ITEMS
+  items: JSON.stringify(
+    data.items || data.line_items || []
+  ),
+};
+    // 🔥 Extract ALL useful data
+    // const traits = {
+    //   name: customer.name,
+    //   email: customer.email,
+    //   source: "GoKwik Checkout",
+
+    //   // 📊 Marketing (IMPORTANT for ig/fb)
+    //   utm_source:
+    //     data.utm_source ||
+    //     data.utm?.source ||
+    //     data.marketing?.utm_source ||
+    //     "direct",
+
+    //   utm_medium:
+    //     data.utm_medium ||
+    //     data.utm?.medium ||
+    //     data.marketing?.utm_medium ||
+    //     "",
+
+    //   utm_campaign:
+    //     data.utm_campaign ||
+    //     data.utm?.campaign ||
+    //     data.marketing?.utm_campaign ||
+    //     "",
+
+    //   // 💰 Cart info
+    //   cart_value:
+    //     data.amount ||
+    //     data.cart_value ||
+    //     data.total_price ||
+    //     "",
+
+    //   currency: data.currency || "INR",
+
+    //   // 📍 Drop stage
+    //   drop_stage:
+    //     data.drop_off_stage ||
+    //     data.stage ||
+    //     data.checkout_stage ||
+    //     "",
+
+    //   // 🆔 Cart ID
+    //   cart_id: data.id || data.cart_id || "",
+
+    //   // 📦 Items (stringified)
+    //   items: JSON.stringify(
+    //     data.items ||
+    //       data.line_items ||
+    //       data.products ||
+    //       []
+    //   ),
+    // };
 
     console.log("📦 Final Traits:", traits);
 
